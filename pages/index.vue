@@ -145,23 +145,23 @@
           <p class="text-red-100 font-semibold text-7xl" style="line-height: 6.125rem">{{ activeCountry && activeCountry.TotalConfirmed | numberWithCommas }}</p>
         </div>
         <div class="card flex-1 my-2 flex flex-col overflow-y-auto">
-          <p class="text-lg font-semibold text-gray-300 leading-6 text-center mb-4">Confirmed Cases by Country/Region</p>
+          <p class="text-lg font-semibold text-gray-300 leading-6 text-center mb-4">Confirmed Cases by Country/Region ({{ data && data.length - 1 }})</p>
           <ul class="overflow-y-auto custom-scrollbar -mx-5">
             <li
-              v-for="country in byCountryDataSortedByCases"
+              v-for="country in dataSortedByCases"
               :key="country.name"
               @click="changeActiveCountry(country)"
               :class="{ 'bg-gray-500': activeCountry && activeCountry.Country === country.Country }"
-              class="capitalize flex items-center border-b border-gray-400 hover:bg-gray-500 py-2 text-xl cursor-pointer px-2"
+              class="capitalize flex items-center border-b border-gray-400 hover:bg-gray-500 py-2 cursor-pointer px-2"
             >
-              <p class="font-semibold leading-6 mr-3 text-red-100">{{ country.TotalConfirmed | numberWithCommas }}</p>
-              <p class="leading-6 text-gray-300">{{ country.Country }}</p>
+              <p class="font-semibold leading-6 mr-3 text-red-100 text-2xl">{{ country.TotalConfirmed | numberWithCommas }}</p>
+              <p class="leading-6 text-gray-300 text-xl">{{ country.Country }}</p>
             </li>
           </ul>
         </div>
         <div class="card flex flex-col justify-center items-center text-gray-300 leading-7" style="flex-basis: 80px">
           <p class="text-lg">Last Updated at (D/M/YYYY)</p>
-          <p class="font-semibold text-2xl">21/2/2020, 5:33:03 PM</p>
+          <p class="font-semibold text-2xl">{{ formattedDate }}</p>
         </div>
       </div>
       <div class="card flex flex-1 mx-2">
@@ -173,17 +173,17 @@
             <p class="text-white text-xl leading-6">Total Deaths</p>
             <p class="text-white font-semibold text-5xl">{{ activeCountry && activeCountry.TotalDeaths | numberWithCommas }}</p>
             <ul class="overflow-y-auto custom-scrollbar -mr-5">
-              <li v-for="country in byCountryData" :key="country.name" class="capitalize flex items-center border-b border-gray-400 py-4">
+              <li v-for="country in data" :key="country.name" class="capitalize flex items-center border-b border-gray-400 py-4">
                 <p class="text-xl font-semibold leading-6 mr-3 text-red-100">{{ country.cases }}</p>
                 <p class="text-xl leading-6 text-gray-300">{{ country.name }}</p>
               </li>
             </ul>
           </div>
-          <div class="card flex flex-col flex-1 mr-2 text-center">
+          <div class="card flex flex-col flex-1 text-center">
             <p class="text-white text-xl leading-6">Total Recovered</p>
             <p class="text-green-100 font-semibold text-5xl">{{ activeCountry && activeCountry.TotalRecovered | numberWithCommas }}</p>
             <ul class="overflow-y-auto custom-scrollbar -mr-5">
-              <li v-for="country in byCountryData" :key="country.name" class="capitalize flex items-center border-b border-gray-400 py-4">
+              <li v-for="country in data" :key="country.name" class="capitalize flex items-center border-b border-gray-400 py-4">
                 <p class="text-xl font-semibold leading-6 mr-3 text-red-100">{{ country.cases }}</p>
                 <p class="text-xl leading-6 text-gray-300">{{ country.name }}</p>
               </li>
@@ -221,7 +221,7 @@ export default {
     return {
       baseURL: "https://api.covid19api.com",
       activeCountry: null,
-      byCountryData: null
+      data: null
     };
   },
   filters: {
@@ -230,10 +230,23 @@ export default {
     }
   },
   computed: {
-    byCountryDataSortedByCases() {
+    formattedDate: function (value) {
+      const d = new Date();
+
+      const ye = new Intl.DateTimeFormat("en", { year: "numeric" }).format(d);
+      const mo = new Intl.DateTimeFormat("en", { month: "numeric" }).format(d);
+      const da = new Intl.DateTimeFormat("en", { day: "2-digit" }).format(d);
+
+      const hr = d.getUTCHours();
+      const min = d.getUTCMinutes();
+      const sc = d.getUTCSeconds();
+
+      return `${da}/${mo}/${ye}, ${hr}:${min}:${sc}`;
+    },
+    dataSortedByCases() {
       return (
-        this.byCountryData &&
-        this.byCountryData.sort(function (a, b) {
+        this.data &&
+        this.data.sort(function (a, b) {
           return b.TotalConfirmed - a.TotalConfirmed;
         })
       );
@@ -250,7 +263,7 @@ export default {
       const global = { Country: "global", ...Global };
       Countries.push(global);
 
-      this.byCountryData = Countries;
+      this.data = Countries;
       this.activeCountry = global;
     },
     initMap() {

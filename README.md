@@ -1,7 +1,7 @@
 # Demo
 
 ```bash
-Soon...
+https://covid19-admin-dashboard.vercel.app/
 ```
 
 ### Preview

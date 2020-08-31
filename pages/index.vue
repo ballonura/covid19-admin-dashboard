@@ -123,9 +123,9 @@
         </svg>
         <p class="text-white text-3xl leading-9">Coronavirus COVID-19 Global Cases by Johns Hopkins CSSE</p>
       </div>
-      <div>
+      <div class="flex justify-center items-center h-8 w-8 text-gray-200 hover:text-white cursor-pointer">
         <!-- prettier-ignore -->
-        <svg class="fill-current text-gray-200 w-5" viewBox="0 -53 384 384">
+        <svg class="fill-current w-5" viewBox="0 -53 384 384">
           <path
             d="m368 154.667969h-352c-8.832031 0-16-7.167969-16-16s7.167969-16 16-16h352c8.832031 0 16 7.167969 16 16s-7.167969 16-16 16zm0 0"
           />
@@ -200,10 +200,10 @@
 
 <script>
 import Chart from "chart.js";
+import countriesMetaData from "@/content/countries.json";
 
 export default {
   mounted() {
-    this.initMap();
     this.getData();
   },
   head() {
@@ -256,12 +256,15 @@ export default {
           return b.TotalConfirmed - a.TotalConfirmed;
         })
       );
+    },
+    activeChartData() {
+      return [this.activeCountry.NewRecovered, this.activeCountry.NewConfirmed, this.activeCountry.NewDeaths];
     }
   },
   methods: {
     async changeActiveCountry(country) {
       this.activeCountry = country;
-      this.initChart();
+      this.updateChart();
     },
     async getData() {
       const { data } = await this.$axios.get(`${this.baseURL}/summary`);
@@ -274,10 +277,26 @@ export default {
       this.activeCountry = global;
 
       this.initChart();
+      this.initMap();
     },
     initMap() {
-      const mymap = L.map("map").setView([51.505, -0.09], 13);
+      const mymap = L.map("map").setView([0, 0], 3);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(mymap);
+
+      for (const countryMetaData of countriesMetaData) {
+        const exist = this.data.find(x => x.CountryCode === countryMetaData.country_code);
+
+        if (exist) {
+          const [lat, lng] = countryMetaData.latlng;
+
+          L.circle([lat, lng], {
+            color: "red",
+            fillColor: "#f03",
+            fillOpacity: 0.5,
+            radius: exist.TotalConfirmed * 0.1
+          }).addTo(mymap);
+        }
+      }
     },
     initChart() {
       if (this.ctx) this.ctx.destroy();
@@ -293,7 +312,7 @@ export default {
           labels: ["Recovered", "Confirmed", "Deaths"],
           datasets: [
             {
-              data: [this.activeCountry.NewRecovered, this.activeCountry.NewConfirmed, this.activeCountry.NewDeaths],
+              data: this.activeChartData,
               backgroundColor: ["rgba(112, 168, 0, 0.2)", "rgba(255, 170, 0, 0.2)", "rgba(230, 0, 0, 0.2)"],
               borderColor: ["rgba(112, 168, 0, 1)", "rgba(255, 170, 0, 1)", "rgba(230, 0, 0, 1)"],
               borderWidth: 1
@@ -331,6 +350,10 @@ export default {
           }
         }
       });
+    },
+    updateChart() {
+      this.ctx.data.datasets[0].data = this.activeChartData;
+      this.ctx.update();
     }
   }
 };

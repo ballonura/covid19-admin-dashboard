@@ -168,29 +168,25 @@
         <div class="w-full" id="map"></div>
       </div>
       <div class="flex flex-col" style="flex-basis: 550px">
-        <div class="flex-1 flex mb-2 overflow-y-auto">
-          <div class="card flex flex-col flex-1 mr-2 text-center">
+        <div class="mb-2 flex flex-wrap" style="flex-basis: 550px">
+          <div class="card w-1/2 flex flex-col justify-center items-center flex-1 mr-2 text-center mb-2">
             <p class="text-white text-xl leading-6">Total Deaths</p>
             <p class="text-white font-semibold text-5xl">{{ activeCountry && activeCountry.TotalDeaths | numberWithCommas }}</p>
-            <ul class="overflow-y-auto custom-scrollbar -mr-5">
-              <li v-for="country in data" :key="country.name" class="capitalize flex items-center border-b border-gray-400 py-4">
-                <p class="text-xl font-semibold leading-6 mr-3 text-red-100">{{ country.cases }}</p>
-                <p class="text-xl leading-6 text-gray-300">{{ country.name }}</p>
-              </li>
-            </ul>
           </div>
-          <div class="card flex flex-col flex-1 text-center">
+          <div class="card w-1/2 flex flex-col justify-center items-center flex-1 text-center mb-2">
             <p class="text-white text-xl leading-6">Total Recovered</p>
             <p class="text-green-100 font-semibold text-5xl">{{ activeCountry && activeCountry.TotalRecovered | numberWithCommas }}</p>
-            <ul class="overflow-y-auto custom-scrollbar -mr-5">
-              <li v-for="country in data" :key="country.name" class="capitalize flex items-center border-b border-gray-400 py-4">
-                <p class="text-xl font-semibold leading-6 mr-3 text-red-100">{{ country.cases }}</p>
-                <p class="text-xl leading-6 text-gray-300">{{ country.name }}</p>
-              </li>
-            </ul>
+          </div>
+          <div class="card w-1/2 flex flex-col justify-center items-center flex-1 mr-2 text-center">
+            <p class="text-white text-xl leading-6">New Deaths</p>
+            <p class="text-white font-semibold text-5xl">{{ activeCountry && activeCountry.NewDeaths | numberWithCommas }}</p>
+          </div>
+          <div class="card w-1/2 flex flex-col justify-center items-center flex-1 text-center">
+            <p class="text-white text-xl leading-6">New Recovered</p>
+            <p class="text-green-100 font-semibold text-5xl">{{ activeCountry && activeCountry.NewRecovered | numberWithCommas }}</p>
           </div>
         </div>
-        <div class="card" style="flex-basis: 380px">3</div>
+        <div class="card flex-1">3</div>
       </div>
     </div>
   </div>
@@ -221,6 +217,7 @@ export default {
     return {
       baseURL: "https://api.covid19api.com",
       activeCountry: null,
+      activeCountryData: null,
       data: null
     };
   },
@@ -253,7 +250,7 @@ export default {
     }
   },
   methods: {
-    changeActiveCountry(country) {
+    async changeActiveCountry(country) {
       this.activeCountry = country;
     },
     async getData() {

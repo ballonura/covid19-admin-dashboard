@@ -168,31 +168,39 @@
         <div class="w-full" id="map"></div>
       </div>
       <div class="flex flex-col" style="flex-basis: 550px">
-        <div class="mb-2 flex flex-wrap" style="flex-basis: 550px">
-          <div class="card w-1/2 flex flex-col justify-center items-center flex-1 mr-2 text-center mb-2">
-            <p class="text-white text-xl leading-6">Total Deaths</p>
-            <p class="text-white font-semibold text-5xl">{{ activeCountry && activeCountry.TotalDeaths | numberWithCommas }}</p>
+        <div class="mb-2 flex flex-col" style="flex-basis: 550px">
+          <div class="card flex-1 mb-2 flex">
+            <div class="flex-1 flex flex-col justify-center items-center">
+              <p class="text-white text-7xl leading-6">Total</p>
+            </div>
+            <div class="flex-1 flex flex-col justify-center items-center">
+              <p class="text-white text-xl leading-6">Recovered</p>
+              <p class="text-green-100 font-semibold text-5xl">{{ activeCountry && activeCountry.TotalRecovered | numberWithCommas }}</p>
+            </div>
           </div>
-          <div class="card w-1/2 flex flex-col justify-center items-center flex-1 text-center mb-2">
-            <p class="text-white text-xl leading-6">Total Recovered</p>
-            <p class="text-green-100 font-semibold text-5xl">{{ activeCountry && activeCountry.TotalRecovered | numberWithCommas }}</p>
-          </div>
-          <div class="card w-1/2 flex flex-col justify-center items-center flex-1 mr-2 text-center">
-            <p class="text-white text-xl leading-6">New Deaths</p>
-            <p class="text-white font-semibold text-5xl">{{ activeCountry && activeCountry.NewDeaths | numberWithCommas }}</p>
-          </div>
-          <div class="card w-1/2 flex flex-col justify-center items-center flex-1 text-center">
-            <p class="text-white text-xl leading-6">New Recovered</p>
-            <p class="text-green-100 font-semibold text-5xl">{{ activeCountry && activeCountry.NewRecovered | numberWithCommas }}</p>
+          <div class="card flex-1 flex">
+            <div class="flex-1 flex flex-col justify-center items-center">
+              <p class="text-white text-xl leading-6">Deaths</p>
+              <p class="text-red-100 font-semibold text-5xl">{{ activeCountry && activeCountry.TotalDeaths | numberWithCommas }}</p>
+            </div>
+            <div class="flex-1 flex flex-col justify-center items-center">
+              <p class="text-white text-xl leading-6">Confirmed</p>
+              <p class="text-orange-100 font-semibold text-5xl">{{ activeCountry && activeCountry.TotalConfirmed | numberWithCommas }}</p>
+            </div>
           </div>
         </div>
-        <div class="card flex-1">3</div>
+        <div class="card flex flex-col justify-between items-center flex-1">
+          <p class="text-white text-xl leading-6">Daily Cases</p>
+          <canvas width="100%" height="100%" ref="chart"></canvas>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import Chart from "chart.js";
+
 export default {
   mounted() {
     this.initMap();
@@ -218,7 +226,8 @@ export default {
       baseURL: "https://api.covid19api.com",
       activeCountry: null,
       activeCountryData: null,
-      data: null
+      data: null,
+      ctx: null
     };
   },
   filters: {
@@ -252,6 +261,7 @@ export default {
   methods: {
     async changeActiveCountry(country) {
       this.activeCountry = country;
+      this.initChart();
     },
     async getData() {
       const { data } = await this.$axios.get(`${this.baseURL}/summary`);
@@ -262,10 +272,65 @@ export default {
 
       this.data = Countries;
       this.activeCountry = global;
+
+      this.initChart();
     },
     initMap() {
       const mymap = L.map("map").setView([51.505, -0.09], 13);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(mymap);
+    },
+    initChart() {
+      if (this.ctx) this.ctx.destroy();
+
+      this.ctx = this.$refs.chart;
+
+      this.ctx.width = "100%";
+      this.ctx.height = "100%";
+
+      this.ctx = new Chart(this.ctx, {
+        type: "bar",
+        data: {
+          labels: ["Recovered", "Confirmed", "Deaths"],
+          datasets: [
+            {
+              data: [this.activeCountry.NewRecovered, this.activeCountry.NewConfirmed, this.activeCountry.NewDeaths],
+              backgroundColor: ["rgba(112, 168, 0, 0.2)", "rgba(255, 170, 0, 0.2)", "rgba(230, 0, 0, 0.2)"],
+              borderColor: ["rgba(112, 168, 0, 1)", "rgba(255, 170, 0, 1)", "rgba(230, 0, 0, 1)"],
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          legend: {
+            display: false
+          },
+          scales: {
+            yAxes: [
+              {
+                gridLines: {
+                  zeroLineColor: "#D6D6D6"
+                },
+                ticks: {
+                  fontColor: "#D6D6D6",
+                  fontSize: 13,
+                  beginAtZero: true
+                }
+              }
+            ],
+            xAxes: [
+              {
+                gridLines: {
+                  zeroLineColor: "#D6D6D6"
+                },
+                ticks: {
+                  fontSize: 13,
+                  fontColor: "#D6D6D6"
+                }
+              }
+            ]
+          }
+        }
+      });
     }
   }
 };

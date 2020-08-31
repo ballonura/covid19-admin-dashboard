@@ -15,6 +15,7 @@ module.exports = {
       "gray-400": "#5C5C5C",
       "gray-500": "#464646",
       "red-100": "#E60000",
+      "orange-100": "#ffaa00",
       "green-100": "#70A800"
     },
     fontSize: {
